@@ -30,7 +30,7 @@
           <Path.RenderTransform><RotateTransform Angle="50"/></Path.RenderTransform>
         </Path>
         <Path x:Name="RzNeg" Tag="Rz" Data="M -9,-8 L 9,0 L -9,8 Z" Fill="{DynamicResource MutedBrush}" Opacity="0.4" Canvas.Left="150" Canvas.Top="198" Cursor="Hand">
-          <Path.RenderTransform><RotateTransform Angle="230"/></Path.RenderTransform>
+          <Path.RenderTransform><RotateTransform Angle="50"/></Path.RenderTransform>
         </Path>
 
         <!-- translation arrows -->

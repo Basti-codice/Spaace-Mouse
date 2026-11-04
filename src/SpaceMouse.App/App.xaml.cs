@@ -36,6 +36,7 @@ public partial class App : Application
 
         try
         {
+            ApplyWindowDefaults();
             var dir = ResolveDataDir();
             ThemeService.Initialize();
             _controller = new AppController(dir);
@@ -68,6 +69,20 @@ public partial class App : Application
             MessageBox.Show("Space Mouse Studio could not start:\n\n" + ex.Message, "Space Mouse Studio", MessageBoxButton.OK, MessageBoxImage.Error);
             Quit();
         }
+    }
+
+    /// <summary>Gives every Window (also derived ones) theme colours and font, so text inherits the right Foreground.</summary>
+    private void ApplyWindowDefaults()
+    {
+        try
+        {
+            var st = new Style(typeof(Window));
+            st.Setters.Add(new Setter(System.Windows.Controls.Control.ForegroundProperty, new DynamicResourceExtension("TextBrush")));
+            st.Setters.Add(new Setter(System.Windows.Controls.Control.BackgroundProperty, new DynamicResourceExtension("BgBrush")));
+            st.Setters.Add(new Setter(System.Windows.Controls.Control.FontFamilyProperty, Resources["UiFont"]));
+            FrameworkElement.StyleProperty.OverrideMetadata(typeof(Window), new FrameworkPropertyMetadata(st));
+        }
+        catch { /* cosmetic: windows then fall back to explicit settings */ }
     }
 
     /// <summary>Portable mode: if a file named "portable.flag" sits next to the EXE, all data lives in .\data.</summary>

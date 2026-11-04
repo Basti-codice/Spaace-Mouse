@@ -6,8 +6,8 @@
   <CornerRadius x:Key="RadiusLg">16</CornerRadius>
 
   <!-- ===== Text ===== -->
+  <!-- No Foreground here on purpose: an explicit value would override button/segment text colours. Windows set Foreground; TextBlocks inherit it. -->
   <Style TargetType="TextBlock">
-    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
     <Setter Property="FontFamily" Value="{StaticResource UiFont}"/>
     <Setter Property="TextWrapping" Value="NoWrap"/>
   </Style>
@@ -114,6 +114,35 @@
   <Style x:Key="IconButton" TargetType="Button" BasedOn="{StaticResource GhostButton}">
     <Setter Property="Width" Value="34"/><Setter Property="Height" Value="34"/><Setter Property="Padding" Value="0"/>
     <Setter Property="FontFamily" Value="{StaticResource IconFont}"/><Setter Property="FontSize" Value="15"/>
+  </Style>
+
+
+  <!-- ===== CheckBox (default look) ===== -->
+  <Style TargetType="CheckBox">
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="CheckBox">
+          <StackPanel Orientation="Horizontal" Background="Transparent">
+            <Border x:Name="box" Width="18" Height="18" CornerRadius="5" BorderThickness="1.5" VerticalAlignment="Center"
+                    Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource MutedBrush}">
+              <TextBlock x:Name="tick" Text="&#xE73E;" FontFamily="{StaticResource IconFont}" FontSize="11" Visibility="Collapsed"
+                         Foreground="{DynamicResource OnAccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <ContentPresenter Margin="10,0,0,0" VerticalAlignment="Center" RecognizesAccessKey="True" TextElement.Foreground="{TemplateBinding Foreground}"/>
+          </StackPanel>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+              <Setter TargetName="box" Property="Background" Value="{DynamicResource AccentBrush}"/>
+              <Setter TargetName="box" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+              <Setter TargetName="tick" Property="Visibility" Value="Visible"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.5"/></Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
   </Style>
 
   <!-- ===== Switch (CheckBox) ===== -->
