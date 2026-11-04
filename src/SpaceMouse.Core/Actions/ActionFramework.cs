@@ -48,7 +48,9 @@ public sealed class ActionContext
     public IEngineControl Control { get; }
     public ActionRegistry Registry { get; }
     public WindowGrabState Grab { get; } = new();
-    public CancellationTokenSource Cancel { get; } = new();
+    public CancellationTokenSource Cancel { get; private set; } = new();
+    /// <summary>Stops running action sequences (panic/mode switch/profile switch) and arms a fresh token for the next ones.</summary>
+    public void CancelMacros() { var old = Cancel; Cancel = new CancellationTokenSource(); try { old.Cancel(); } catch { } }
     public IInputSimulator Input => Platform.Input;
     public IWindowService Windows => Platform.Windows;
     public ISystemService System => Platform.System;

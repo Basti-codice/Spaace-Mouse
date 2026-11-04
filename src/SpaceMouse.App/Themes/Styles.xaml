@@ -8,7 +8,6 @@
   <!-- ===== Text ===== -->
   <!-- No Foreground here on purpose: an explicit value would override button/segment text colours. Windows set Foreground; TextBlocks inherit it. -->
   <Style TargetType="TextBlock">
-    <Setter Property="FontFamily" Value="{StaticResource UiFont}"/>
     <Setter Property="TextWrapping" Value="NoWrap"/>
   </Style>
   <Style x:Key="H1" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">

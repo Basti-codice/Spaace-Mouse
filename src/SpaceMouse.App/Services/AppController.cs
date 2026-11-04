@@ -35,6 +35,7 @@ public sealed class AppController : ObservableObject, IDisposable
     private HardwareProfile _activeHardware;
     private readonly TimerResolution _timer = new();
     private readonly HotkeyManager _hotkey = new();
+    private string? _lastHotkey;
 
     public AppController(string dataDir)
     {
@@ -169,7 +170,7 @@ public sealed class AppController : ObservableObject, IDisposable
 
     /// <summary>Report ids the device sends that the active hardware profile cannot decode.</summary>
     public bool HasUnrecognisedReports =>
-        ActiveSource == SourceKind.Hardware && Hub.SeenReports.Any(r => !_activeHardware.Reports.Any(l => l.ReportId == r.Id));
+        ActiveSource == SourceKind.Hardware && Hub.SeenReports.Any(r => r.Id <= 3 && !_activeHardware.Reports.Any(l => l.ReportId == r.Id));
 
     public long ReportCount => (_hardware as RawInputHidSource)?.ReportCount ?? (_hardware as DirectHidSource)?.ReportCount ?? 0;
     public string? SourceError => (_hardware as RawInputHidSource)?.LastError ?? (_hardware as DirectHidSource)?.LastError;
@@ -317,8 +318,11 @@ public sealed class AppController : ObservableObject, IDisposable
         {
             var oldId = src.QuickMenus[i].Id; var newId = p.QuickMenus[i].Id;
             void Fix(ActionDef? a) { if (a != null && a.Params.TryGetValue("menu", out var m) && m == oldId) a.Params["menu"] = newId; }
-            foreach (var b in p.Buttons) { Fix(b.Action); Fix(b.LongPress); }
-            foreach (var ax in p.Axes) { Fix(ax.Action); Fix(ax.Positive); Fix(ax.Negative); }
+            void FixDeep(ActionDef? a) { if (a == null) return; Fix(a); foreach (var st in a.Steps) FixDeep(st); }
+            void FixItems(IEnumerable<SpaceMouse.Core.Profiles.MenuItem> items) { foreach (var it in items) { FixDeep(it.Action); FixItems(it.Children); } }
+            foreach (var b in p.Buttons) { FixDeep(b.Action); FixDeep(b.LongPress); }
+            foreach (var ax in p.Axes) { FixDeep(ax.Action); FixDeep(ax.Positive); FixDeep(ax.Negative); }
+            foreach (var m in p.QuickMenus) FixItems(m.Items);
         }
         return p;
     }
@@ -375,6 +379,8 @@ public sealed class AppController : ObservableObject, IDisposable
 
     private void ApplyHotkey()
     {
+        if (_lastHotkey == Settings.ToggleHotkey && _hotkey.LastError == null) return;
+        _lastHotkey = Settings.ToggleHotkey;
         _hotkey.Register(Settings.ToggleHotkey);
         HotkeyError = _hotkey.LastError;
         Raise(nameof(HotkeyError));

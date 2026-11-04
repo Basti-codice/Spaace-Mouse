@@ -13,6 +13,7 @@ public sealed class SendInputSimulator : IInputSimulator
     private readonly object _l = new();
     private readonly HashSet<ushort> _keys = new();
     private readonly HashSet<MouseButton> _buttons = new();
+    private long _lastFail;
 
     /// <summary>Raised when Windows refuses injection (e.g. target window is elevated and we are not).</summary>
     public event Action<string>? Failed;
@@ -22,8 +23,11 @@ public sealed class SendInputSimulator : IInputSimulator
     private void Send(params Native.INPUT[] inputs)
     {
         var sent = Native.SendInput((uint)inputs.Length, inputs, Size);
-        if (sent != inputs.Length)
+        if (sent != inputs.Length && Environment.TickCount64 - _lastFail > 3000)
+        {
+            _lastFail = Environment.TickCount64;
             Failed?.Invoke("Windows blocked the input (error " + Marshal.GetLastWin32Error() + "). If the target app runs as administrator, start Space Mouse Studio as administrator too.");
+        }
     }
 
     private static Native.INPUT Mouse(uint flags, int dx = 0, int dy = 0, uint data = 0) => new()

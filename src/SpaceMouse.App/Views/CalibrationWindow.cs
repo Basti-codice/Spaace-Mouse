@@ -132,6 +132,7 @@ public sealed class CalibrationWindow : Window
     private SpaceMouseView? _hint, _testView;
     private TextBox? _nameBox;
     private int _dirStepShown = -1;
+    private readonly bool _resume;
 
     public CalibrationWindow()
     {
@@ -141,6 +142,8 @@ public sealed class CalibrationWindow : Window
         SetResourceReference(BackgroundProperty, "BgBrush");
         FontFamily = (FontFamily)Application.Current.Resources["UiFont"];
         _session = NewSession();
+        _resume = _app.IsActive;
+        if (_resume) _app.Engine.SetMode(SpaceMouse.Core.Engine.EngineMode.Standard);   // never fire real actions while calibrating
 
         _stepLabel.Style = (Style)Application.Current.Resources["Muted"];
         _progress.Style = (Style)Application.Current.Resources["ThinBar"]; _progress.Maximum = 7; _progress.Margin = new Thickness(0, 8, 0, 0);
@@ -174,7 +177,7 @@ public sealed class CalibrationWindow : Window
         _app.StateChanged += OnState;
         _timer.Tick += (_, _) => Safe(Tick);
         _timer.Start();
-        Closed += (_, _) => { _timer.Stop(); _app.Hub.RawReceived -= OnRaw; _app.StateChanged -= OnState; };
+        Closed += (_, _) => { if (_resume) _app.Engine.SetMode(SpaceMouse.Core.Engine.EngineMode.Custom); _timer.Stop(); _app.Hub.RawReceived -= OnRaw; _app.StateChanged -= OnState; };
         ShowPage(0);
     }
 
@@ -184,7 +187,10 @@ public sealed class CalibrationWindow : Window
         {
             var w = new CalibrationWindow();
             if (owner != null && owner.IsVisible) w.Owner = owner; else w.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-            w.ShowDialog();
+            // Modeless on purpose: the virtual controller window must stay usable while calibrating the simulation.
+            if (owner != null) owner.IsEnabled = false;
+            w.Closed += (_, _) => { if (owner != null) { owner.IsEnabled = true; owner.Activate(); } };
+            w.Show();
         }
         catch (Exception e) { MessageBox.Show("Calibration could not be opened: " + e.Message, "Space Mouse Studio"); }
     }

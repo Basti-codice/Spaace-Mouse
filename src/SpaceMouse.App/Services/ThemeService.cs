@@ -17,7 +17,7 @@ public static class ThemeService
     {
         SystemEvents.UserPreferenceChanged += (_, _) =>
         {
-            if (_setting == ThemeSetting.System) Application.Current?.Dispatcher.BeginInvoke(new Action(() => Apply(_setting)));
+            if (_setting == ThemeSetting.System && SystemIsDark() != IsDark) Application.Current?.Dispatcher.BeginInvoke(new Action(() => Apply(_setting)));
         };
     }
 

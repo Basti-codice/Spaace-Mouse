@@ -40,7 +40,7 @@ public sealed class QuickMenuController
     {
         if (IsOpen || menu.Items.Count == 0) return false;
         Menu = menu; HoldMode = holdMode; CursorX = cursorX; CursorY = cursorY;
-        _path.Clear(); _items = menu.Items; Selected = -1; _opened = now; _nextStep = now;
+        _path.Clear(); _items = menu.Items.ToList(); Selected = -1; _opened = now; _nextStep = now;
         _pushLatched = true; // require releasing the push before it can confirm
         IsOpen = true;
         Opened?.Invoke(View);
@@ -52,6 +52,7 @@ public sealed class QuickMenuController
         if (!IsOpen || Menu == null) return;
         if (now - _opened > MaxOpenSeconds) { Cancel(); return; }
         var n = _items.Count;
+        if (n == 0) { Cancel(); return; }
         var old = Selected;
 
         if (Menu.SelectMode == MenuSelectMode.Direction)

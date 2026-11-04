@@ -272,7 +272,7 @@ public sealed class DirectHidSource : IRawReportSource
                     ReportCount++;
                     ReportReceived?.Invoke(new RawReport(data, DateTime.UtcNow));
                 }
-                Native.CloseHandle(h); _handle = 0;
+                var hh = System.Threading.Interlocked.Exchange(ref _handle, 0); if (hh != 0) Native.CloseHandle(hh);
                 _connected = false; _device = null;
                 ConnectionChanged?.Invoke(false, null);
             }
@@ -284,7 +284,7 @@ public sealed class DirectHidSource : IRawReportSource
     {
         _run = false;
         var h = _handle;
-        if (h != 0) { Native.CancelIoEx(h, 0); Native.CloseHandle(h); }
+        if (h != 0) { Native.CancelIoEx(h, 0); h = System.Threading.Interlocked.Exchange(ref _handle, 0); if (h != 0) Native.CloseHandle(h); }
         _thread?.Join(1000); _thread = null;
         if (_connected) { _connected = false; ConnectionChanged?.Invoke(false, null); }
     }

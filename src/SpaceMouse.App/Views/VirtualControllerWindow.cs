@@ -271,7 +271,7 @@ public sealed class VirtualControllerWindow : Window
         Content = new ScrollViewer { Content = page, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
 
         PreviewKeyDown += OnKeyDown; PreviewKeyUp += OnKeyUp;
-        Deactivated += (_, _) => { _keys.Clear(); Push(); };
+        Deactivated += (_, _) => { _keys.Clear(); Push(); if (!_left.Latch) _left.SetDown(false); if (!_right.Latch) _right.SetDown(false); };
         _app.StateChanged += Sync;
         _app.Activity.CollectionChanged += OnActivity;
         Closed += OnClosed;

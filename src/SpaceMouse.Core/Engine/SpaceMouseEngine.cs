@@ -213,8 +213,11 @@ public sealed class SpaceMouseEngine : IEngineControl, IDisposable
 
     private void Report(string message)
     {
-        if (_errorTimes.TryGetValue(message, out var t) && _time - t < 2.0) return;
-        _errorTimes[message] = _time;
+        lock (_errorTimes)
+        {
+            if (_errorTimes.TryGetValue(message, out var t) && _time - t < 2.0) return;
+            _errorTimes[message] = _time;
+        }
         ErrorOccurred?.Invoke(message);
     }
 
@@ -263,8 +266,9 @@ public sealed class SpaceMouseEngine : IEngineControl, IDisposable
                 try { h.Main.End(); } catch { /* best effort */ }
             rt.Began = false;
         }
-        foreach (var r in _btn) { r.Down = false; r.UsedAsModifier = false; }
+        foreach (var r in _btn) { r.UsedAsModifier = r.Down; r.Down = false; }   // a still-held button must not fire a Tap when released later
         _ctx.Grab.Handle = 0;
+        _ctx.CancelMacros();
         try { _platform.Input.ReleaseAll(); } catch { /* never throw while releasing */ }
         Array.Clear(_processed);
     }
