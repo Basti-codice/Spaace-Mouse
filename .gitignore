@@ -5,3 +5,4 @@ dist/
 *.user
 .vs/
 TestResults/
+.claude/

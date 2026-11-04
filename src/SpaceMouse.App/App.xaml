@@ -1,6 +1,7 @@
 <Application x:Class="SpaceMouse.App.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:svc="clr-namespace:SpaceMouse.App.Services"
              ShutdownMode="OnExplicitShutdown">
   <Application.Resources>
     <ResourceDictionary>
@@ -8,6 +9,10 @@
         <ResourceDictionary Source="Themes/Light.xaml"/>
         <ResourceDictionary Source="Themes/Styles.xaml"/>
       </ResourceDictionary.MergedDictionaries>
+      <svc:IconConverter x:Key="IconConv"/>
+      <svc:BoolToVisibility x:Key="BoolVis"/>
+      <svc:BoolToVisibility x:Key="BoolVisInv" Invert="True"/>
+      <svc:NullToVisibility x:Key="NullVis"/>
     </ResourceDictionary>
   </Application.Resources>
 </Application>

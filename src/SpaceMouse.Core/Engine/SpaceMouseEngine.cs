@@ -371,26 +371,15 @@ public sealed class SpaceMouseEngine : IEngineControl, IDisposable
 
         var t = binding.Tuning;
         var raw = f.Get(i);
-        if (t.Invert) raw = -raw;
-        var mag = Math.Abs(raw);
-        var sign = raw < 0 ? -1 : 1;
-
-        // dead zone with re-scaling
-        var dz = Math.Clamp(t.Deadzone, 0, 0.95);
-        var a = mag <= dz ? 0 : (mag - dz) / (1 - dz);
 
         if (binding.Behavior == AxisBehavior.Continuous)
         {
-            if (a <= 0)
+            var value = AxisMath.Continuous(t, raw);
+            if (value == 0)
             {
                 if (rt.Active) { rt.Active = false; Safe(binding.Action, () => rt.Cont.Deactivate(), log: false); }
                 return;
             }
-            a = Math.Pow(a, Math.Max(0.1, t.Acceleration));
-            if (t.WeakZone > 0 && a < t.WeakZone) a *= t.WeakDamping;
-            a *= t.Sensitivity;
-            if (mag >= t.StrongThreshold) a *= t.StrongMultiplier;
-            var value = sign * a * t.Speed;
             _processed[i] = value;
             MarkModifierUsed(binding.Modifier);
             if (!rt.Active) { rt.Active = true; Safe(binding.Action, () => rt.Cont.Activate(), log: false); }
@@ -398,8 +387,10 @@ public sealed class SpaceMouseEngine : IEngineControl, IDisposable
         }
         else
         {
-            var m = Math.Min(1.0, a * Math.Max(0.01, t.Sensitivity));
-            _processed[i] = sign * m;
+            var level = AxisMath.Discrete(t, raw);
+            var m = Math.Abs(level);
+            var sign = level < 0 ? -1 : 1;
+            _processed[i] = level;
             var rearm = Math.Max(0.05, t.Threshold * 0.6);
             if (m < rearm) { rt.PosArmed = rt.NegArmed = true; rt.NextRepeat = 0; return; }
             if (m < t.Threshold) return;

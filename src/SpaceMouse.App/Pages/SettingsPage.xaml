@@ -1,5 +1,9 @@
 <UserControl x:Class="SpaceMouse.App.Pages.SettingsPage"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <Grid><TextBlock Text="SettingsPage (stub)"/></Grid>
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel MaxWidth="760" HorizontalAlignment="Left">
+      <StackPanel x:Name="Host"/>
+    </StackPanel>
+  </ScrollViewer>
 </UserControl>

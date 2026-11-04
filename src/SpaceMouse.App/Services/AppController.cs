@@ -28,6 +28,7 @@ public sealed class AppController : ObservableObject, IDisposable
     private readonly Dispatcher _ui;
     private readonly DispatcherTimer _saveTimer;
     private readonly DispatcherTimer _fgTimer;
+    private readonly DispatcherTimer _reloadTimer;
     private bool _profilesDirty, _hardwareDirty;
     private IRawReportSource? _hardware;
     private bool _useVirtual;
@@ -71,6 +72,8 @@ public sealed class AppController : ObservableObject, IDisposable
 
         _saveTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
         _saveTimer.Tick += (_, _) => { _saveTimer.Stop(); FlushSave(); };
+        _reloadTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
+        _reloadTimer.Tick += (_, _) => { _reloadTimer.Stop(); Engine.Reload(); };
         _fgTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(700) };
         _fgTimer.Tick += (_, _) => PollForeground();
     }
@@ -291,7 +294,7 @@ public sealed class AppController : ObservableObject, IDisposable
     public void ProfileEdited(Profile p)
     {
         _profilesDirty = true; _saveTimer.Stop(); _saveTimer.Start();
-        if (Engine.ActiveProfile?.Id == p.Id) Engine.Reload();
+        if (Engine.ActiveProfile?.Id == p.Id) { _reloadTimer.Stop(); _reloadTimer.Start(); }   // debounced: sliders fire many edits
         StateChanged?.Invoke();
     }
 
