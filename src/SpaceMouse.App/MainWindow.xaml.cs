@@ -15,6 +15,20 @@ public partial class MainWindow : Window
     private string _current = "";
     private string _bannerTarget = "";
     private bool _trayHintShown;
+    private readonly List<TextBlock> _navLabels = new();
+    private bool? _compact;
+
+    /// <summary>Narrow window: navigation shrinks to an icon rail so the pages keep their room.</summary>
+    private void ApplyCompact()
+    {
+        var c = ActualWidth < 1120;
+        if (_compact == c) return;
+        _compact = c;
+        NavCol.Width = new GridLength(c ? 72 : 228);
+        foreach (var l in _navLabels) l.Visibility = c ? Visibility.Collapsed : Visibility.Visible;
+        LogoText.Visibility = c ? Visibility.Collapsed : Visibility.Visible;
+        NavStatusBox.Visibility = c ? Visibility.Collapsed : Visibility.Visible;
+    }
 
     public MainWindow()
     {
@@ -33,7 +47,9 @@ public partial class MainWindow : Window
             var rb = new RadioButton { Style = (Style)FindResource("NavItem"), GroupName = "nav", Tag = key };
             var row = new StackPanel { Orientation = Orientation.Horizontal };
             row.Children.Add(new TextBlock { Style = (Style)FindResource("Icon"), Text = IconMap.Glyph(p.Icon), FontSize = 16, Width = 26 });
-            row.Children.Add(new TextBlock { Text = p.Title, FontSize = 13.5, FontWeight = FontWeights.Medium, VerticalAlignment = VerticalAlignment.Center });
+            var lbl = new TextBlock { Text = p.Title, FontSize = 13.5, FontWeight = FontWeights.Medium, VerticalAlignment = VerticalAlignment.Center };
+            _navLabels.Add(lbl); rb.ToolTip = p.Title;
+            row.Children.Add(lbl);
             rb.Content = row;
             rb.Checked += (_, _) => Navigate(key);
             NavPanel.Children.Add(rb);
@@ -44,6 +60,8 @@ public partial class MainWindow : Window
         _app.NavigateRequested += k => Dispatcher.BeginInvoke(new Action(() => { if (_nav.TryGetValue(k, out var rb)) rb.IsChecked = true; }));
         SourceInitialized += (_, _) => ThemeService.ApplyToWindow(this);
         Closing += OnClosing;
+        SizeChanged += (_, _) => ApplyCompact();
+        Loaded += (_, _) => ApplyCompact();
         _nav["Dashboard"].IsChecked = true;
         Sync();
     }

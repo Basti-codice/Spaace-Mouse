@@ -23,7 +23,14 @@ public sealed class RadialMenuControl : UserControl
 
     private readonly Canvas _canvas = new() { Width = Size, Height = Size };
     private readonly List<Seg> _segs = new();
-    private readonly TextBlock _centerMain = new(), _centerSub = new();
+    private readonly TextBlock _centerMain = new(), _centerSub = new(), _centerHint = new();
+    private readonly Ellipse _dot = new() { Width = 16, Height = 16, IsHitTestVisible = false, Opacity = 0 };
+    private readonly Ellipse _dotRing = new() { Width = 28, Height = 28, StrokeThickness = 1.5, IsHitTestVisible = false, Opacity = 0 };
+    /// <summary>Shown in the centre while an item is highlighted, e.g. "Release to select".</summary>
+    public string ConfirmHint { get; set; } = "";
+    /// <summary>Shown in the centre line below, e.g. "Centre = cancel".</summary>
+    public string CancelHint { get; set; } = "";
+    public string IdleHint { get; set; } = "Push toward an item";
     private IReadOnlyList<MenuItem>? _items;
     private int _sel = -1;
     private string _title = "";
@@ -40,6 +47,21 @@ public sealed class RadialMenuControl : UserControl
     }
 
     public int Selected => _sel;
+
+    /// <summary>x right, y forward (up), each -1..1.</summary>
+    public void SetPointer(double x, double y)
+    {
+        var len = Math.Sqrt(x * x + y * y);
+        if (len > 1) { x /= len; y /= len; }
+        const double reach = RIn - 26;
+        var px = C + x * reach; var py = C - y * reach;
+        Canvas.SetLeft(_dot, px - 8); Canvas.SetTop(_dot, py - 8);
+        Canvas.SetLeft(_dotRing, px - 14); Canvas.SetTop(_dotRing, py - 14);
+        var show = len > 0.06;
+        _dot.Opacity = show ? 1 : 0.0; _dotRing.Opacity = show ? 0.45 : 0.0;
+    }
+
+    public void RefreshHints() => ApplySelection(animate: false);
 
     public void SetMenu(IReadOnlyList<MenuItem> items, int selected, string title)
     {
@@ -140,7 +162,17 @@ public sealed class RadialMenuControl : UserControl
         _centerSub.SetResourceReference(TextBlock.ForegroundProperty, "MutedBrush");
         Canvas.SetLeft(_centerMain, C - 70); Canvas.SetTop(_centerMain, C - 22);
         Canvas.SetLeft(_centerSub, C - 70); Canvas.SetTop(_centerSub, C + 6);
-        _canvas.Children.Add(_centerMain); _canvas.Children.Add(_centerSub);
+        _centerHint.FontSize = 10.5; _centerHint.Width = 140; _centerHint.TextAlignment = TextAlignment.Center; _centerHint.IsHitTestVisible = false;
+        _centerHint.TextTrimming = TextTrimming.CharacterEllipsis; _centerHint.Opacity = 0.8;
+        _centerHint.SetResourceReference(TextBlock.ForegroundProperty, "MutedBrush");
+        Canvas.SetLeft(_centerHint, C - 70); Canvas.SetTop(_centerHint, C + 34);
+        _canvas.Children.Add(_centerMain); _canvas.Children.Add(_centerSub); _canvas.Children.Add(_centerHint);
+
+        // live pointer: shows where the cap is pushed, so the highlighted item is never a surprise
+        _dot.SetResourceReference(Shape.FillProperty, "AccentBrush");
+        _dotRing.SetResourceReference(Shape.StrokeProperty, "AccentBrush");
+        _canvas.Children.Add(_dotRing); _canvas.Children.Add(_dot);
+        SetPointer(0, 0);
 
         ApplySelection(animate: false);
     }
@@ -172,12 +204,14 @@ public sealed class RadialMenuControl : UserControl
         {
             var it = items[_sel];
             _centerMain.Text = it.Label;
-            _centerSub.Text = it.Id == QuickMenuController.BackId ? "Go back" : it.HasChildren ? "Submenu" : _title;
+            _centerSub.Text = it.Id == QuickMenuController.BackId ? "Go back" : it.HasChildren ? "Submenu - opens on select" : _title;
+            _centerHint.Text = ConfirmHint;
         }
         else
         {
             _centerMain.Text = _title;
-            _centerSub.Text = items == null || items.Count == 0 ? "No items" : "Point at an item";
+            _centerSub.Text = items == null || items.Count == 0 ? "No items" : IdleHint;
+            _centerHint.Text = CancelHint;
         }
     }
 }

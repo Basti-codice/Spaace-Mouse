@@ -7,7 +7,7 @@ Move the cursor, scroll, switch browser tabs and windows, move windows around, f
 > **Honest status:** this software was developed and tested *without* access to a physical SpaceMouse. The HID
 > input layer is implemented from public documentation and verified only against simulated devices.
 > Please read [First hardware test](#first-hardware-test) before relying on it. Everything else (engine, actions,
-> profiles, quick menu logic, persistence) is covered by 105 automated tests that run against a virtual SpaceMouse.
+> profiles, quick menu logic, persistence) is covered by 109 automated tests that run against a virtual SpaceMouse.
 
 ---
 
@@ -67,6 +67,14 @@ Click an axis or button on the SpaceMouse illustration (Home or Customize):
 
 Buttons can fire **on click**, **on press** or **while held**, with an optional different action on **long press**. A button used for combinations does not also fire its own click when you moved the cap while holding it.
 
+## Newer comfort features
+
+* **Pick up & carry a window** (Windows category: *Pick up / drop window*, used by the Window Manager preset on the right button): press once - the window under the cursor follows the cap (any cursor-movement binding moves the window instead) - press again to drop it. Switching control off drops it too.
+* **Trigger point bar** (one-action-per-push axes): a live bar shows how far you push; drag the marker to set where it fires, or use *Light / Normal / Firm* presets. The bar tells you "Would trigger now".
+* **Shortcut recorder**: *Record* then press the keys; keys are shown as key caps; one-click list of common shortcuts.
+* **Response presets** for smooth axes (*Precise / Balanced / Fast*) plus a live curve that also shows the resulting cursor speed in px/s.
+* **Responsive layout**: narrow windows collapse the navigation to icons and stack the editor under the device view.
+
 ## Quick menu
 
 A radial menu that opens **around the mouse cursor**.
@@ -99,7 +107,7 @@ Data location: `%APPDATA%\SpaceMouseStudio` (or `.\data` in portable mode) - rea
 ## Build from source
 
 ```bash
-dotnet test tests/SpaceMouse.Core.Tests          # 105 tests, runs on Windows, Linux, macOS
+dotnet test tests/SpaceMouse.Core.Tests          # 109 tests, runs on Windows, Linux, macOS
 ./build/release.sh                               # tests + win-x64 publish + portable zip (+ NSIS installer if makensis is available)
 ```
 The WPF app targets `net8.0-windows` and can be cross-built on Linux (`EnableWindowsTargeting`). A GitHub Actions workflow (`.github/workflows/build.yml`) builds everything including the installer on `windows-latest`.

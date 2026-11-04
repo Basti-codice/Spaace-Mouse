@@ -28,6 +28,16 @@ public sealed class QuickMenuController
     public int CursorX { get; private set; }
     public int CursorY { get; private set; }
 
+    /// <summary>Live pointer (X right, Y forward, each -1..1) for the on-screen indicator.</summary>
+    public (double X, double Y) Pointer { get; private set; }
+    public event Action<double, double>? PointerChanged;
+    private void SetPointer(double x, double y)
+    {
+        if (Math.Abs(x - Pointer.X) < 0.01 && Math.Abs(y - Pointer.Y) < 0.01) return;
+        Pointer = (x, y);
+        PointerChanged?.Invoke(x, y);
+    }
+
     public event Action<QuickMenuView>? Opened;
     public event Action<QuickMenuView>? Changed;
     /// <summary>Raised on close; argument is the confirmed leaf item or null when cancelled.</summary>
@@ -41,6 +51,7 @@ public sealed class QuickMenuController
         if (IsOpen || menu.Items.Count == 0) return false;
         Menu = menu; HoldMode = holdMode; CursorX = cursorX; CursorY = cursorY;
         _path.Clear(); _items = menu.Items.ToList(); Selected = -1; _opened = now; _nextStep = now;
+        Pointer = (0, 0);
         _pushLatched = true; // require releasing the push before it can confirm
         IsOpen = true;
         Opened?.Invoke(View);
@@ -58,13 +69,22 @@ public sealed class QuickMenuController
         if (Menu.SelectMode == MenuSelectMode.Direction)
         {
             double x = f[Menu.DirectionX], y = f[Menu.DirectionY];
+            SetPointer(x, y);
             if (Math.Sqrt(x * x + y * y) < Menu.SelectDeadzone) Selected = -1;
             else
             {
                 var ang = Math.Atan2(x, y); // 0 = up, clockwise
                 if (ang < 0) ang += 2 * Math.PI;
                 var sector = 2 * Math.PI / n;
-                Selected = (int)Math.Round(ang / sector) % n;
+                var candidate = (int)Math.Round(ang / sector) % n;
+                // Magnetism: stay on the current item until the pointer is clearly inside the neighbour (15 % past the border).
+                if (Selected >= 0 && Selected < n && candidate != Selected)
+                {
+                    var d = Math.Abs(ang - Selected * sector);
+                    d = Math.Min(d, 2 * Math.PI - d);
+                    if (d < sector * 0.65) candidate = Selected;
+                }
+                Selected = candidate;
             }
         }
         else

@@ -25,6 +25,7 @@ public partial class QuickMenuPage : UserControl, IPage
     public QuickMenuPage()
     {
         InitializeComponent();
+        Services.ResponsiveLayout.Attach(this, MainGrid, QmLeft, QmRight, 1050, PageScroll, QmLeft, QmRight);
         Preview.ItemClicked += i =>
         {
             var cur = Cur;

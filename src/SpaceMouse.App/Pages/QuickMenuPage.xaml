@@ -13,14 +13,14 @@
       </StackPanel>
     </Border>
 
-    <Grid x:Name="MainGrid">
+    <ScrollViewer x:Name="PageScroll" VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Disabled"><Grid x:Name="MainGrid">
       <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="400"/>
+        <ColumnDefinition Width="400" MinWidth="320"/>
         <ColumnDefinition Width="24"/>
         <ColumnDefinition Width="*"/>
       </Grid.ColumnDefinitions>
 
-      <ScrollViewer Grid.Column="0">
+      <ScrollViewer x:Name="QmLeft" Grid.Column="0">
         <StackPanel>
           <Border Style="{StaticResource Card}" Padding="16">
             <StackPanel>
@@ -58,7 +58,7 @@
         </StackPanel>
       </ScrollViewer>
 
-      <ScrollViewer Grid.Column="2">
+      <ScrollViewer x:Name="QmRight" Grid.Column="2">
         <StackPanel x:Name="RightPanel">
           <Border Style="{StaticResource Card}" Padding="16">
             <StackPanel>
@@ -93,6 +93,6 @@
           </Border>
         </StackPanel>
       </ScrollViewer>
-    </Grid>
+    </Grid></ScrollViewer>
   </Grid>
 </UserControl>

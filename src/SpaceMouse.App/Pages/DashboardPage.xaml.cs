@@ -13,6 +13,7 @@ public partial class DashboardPage : UserControl, IPage
     public DashboardPage()
     {
         InitializeComponent();
+        ResponsiveLayout.Attach(this, Root, LeftCol, RightCol, 1000, null);
         ActivityList.ItemsSource = _app.Activity;
         _app.Activity.CollectionChanged += (_, _) => NoActivity.Visibility = _app.Activity.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         ProfileList.ItemsSource = _app.Profiles;

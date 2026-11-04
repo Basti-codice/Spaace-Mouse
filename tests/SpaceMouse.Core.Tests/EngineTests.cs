@@ -582,3 +582,60 @@ public class EngineTests
         Assert.InRange(r.CursorSum(true), 900, 1100);
     }
 }
+
+public class UxFeatureTests
+{
+    [Fact]
+    public void WindowCarry_PicksUpOnFirstPress_MovesWithCursorAxes_DropsOnSecond()
+    {
+        using var r = new Rig(Presets.WindowManager);
+        r.Press(ButtonId.Right); r.Run(0.05); r.Release(ButtonId.Right); r.Run(0.05);   // tap = pick up
+        Assert.Contains(r.Executed, e => e.Contains("Pick up"));
+        r.Platform.Clear();
+        r.Move(Axis.Tx, 1); r.Run(0.5);
+        Assert.True(r.Count("window-move") > 10);
+        Assert.Equal(0, r.Count("cursor "));            // cursor stays, window moves
+        r.Move(Axis.Tx, 0); r.Run(0.05);
+        r.Press(ButtonId.Right); r.Run(0.05); r.Release(ButtonId.Right); r.Run(0.05);   // drop
+        r.Platform.Clear();
+        r.Move(Axis.Tx, 1); r.Run(0.3);
+        Assert.Equal(0, r.Count("window-move"));
+        Assert.True(r.Count("cursor ") > 5);            // cursor moves again
+    }
+
+    [Fact]
+    public void WindowCarry_IsDroppedWhenControlIsSwitchedOff()
+    {
+        using var r = new Rig(Presets.WindowManager);
+        r.Press(ButtonId.Right); r.Run(0.05); r.Release(ButtonId.Right); r.Run(0.05);
+        r.Engine.SetMode(EngineMode.Standard); r.Engine.SetMode(EngineMode.Custom); r.Run(0.05);
+        r.Platform.Clear();
+        r.Move(Axis.Tx, 1); r.Run(0.3);
+        Assert.Equal(0, r.Count("window-move"));
+    }
+
+    [Fact]
+    public void QuickMenu_Magnetism_DoesNotFlickerAtSectorBorder()
+    {
+        using var r = new Rig(Presets.Browser);
+        r.Engine.OpenQuickMenu(null, false);
+        r.Move(Axis.Ty, 1); r.Run(0.03);
+        Assert.Equal(0, r.Engine.Menu.Selected);
+        // 8 items -> sector 45 deg; border at 22.5 deg. 24 deg is inside the 15 % hysteresis band.
+        var a = 24 * Math.PI / 180;
+        r.Device.SetAxes(Math.Sin(a), Math.Cos(a), 0, 0, 0, 0); r.Run(0.03);
+        Assert.Equal(0, r.Engine.Menu.Selected);
+        a = 35 * Math.PI / 180;
+        r.Device.SetAxes(Math.Sin(a), Math.Cos(a), 0, 0, 0, 0); r.Run(0.03);
+        Assert.Equal(1, r.Engine.Menu.Selected);
+    }
+
+    [Fact]
+    public void QuickMenu_PointerFollowsDeflection()
+    {
+        using var r = new Rig(Presets.Browser);
+        r.Engine.OpenQuickMenu(null, false);
+        r.Move(Axis.Tx, 0.8); r.Run(0.03);
+        Assert.Equal(0.8, r.Engine.Menu.Pointer.X, 1);
+    }
+}

@@ -262,7 +262,7 @@ public sealed class ActionPicker : UserControl
                 grid.ColumnDefinitions.Add(new ColumnDefinition());
                 grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
                 var tb = new TextBox { Text = current };
-                var rec = new Button { Content = "Record", Margin = new Thickness(8, 0, 0, 0), ToolTip = "Click, then press the key combination" };
+                var rec = new Button { Content = "Record", Margin = new Thickness(8, 0, 0, 0), Style = (Style)Application.Current.Resources["PrimaryButton"], ToolTip = "Click, then press the key combination" };
                 Grid.SetColumn(rec, 1);
                 var hint = new TextBlock { Text = p.Hint, Style = (Style)Application.Current.Resources["Muted"], FontSize = 11, Margin = new Thickness(0, 3, 0, 0) };
                 tb.TextChanged += (_, _) =>
@@ -272,7 +272,7 @@ public sealed class ActionPicker : UserControl
                     hint.Text = ok ? p.Hint : "Not a valid combination";
                     hint.SetResourceReference(TextBlock.ForegroundProperty, ok ? "MutedBrush" : "DangerBrush");
                 };
-                rec.Click += (_, _) => { _recording = true; rec.Content = "Press keys..."; tb.Focus(); };
+                rec.Click += (_, _) => { _recording = true; rec.Content = "Press your shortcut..."; tb.Focus(); };
                 tb.PreviewKeyDown += (_, e) =>
                 {
                     if (!_recording) return;
@@ -293,7 +293,42 @@ public sealed class ActionPicker : UserControl
                 tb.LostKeyboardFocus += (_, _) => { _recording = false; rec.Content = "Record"; };
                 var wrap = new StackPanel();
                 grid.Children.Add(tb); grid.Children.Add(rec);
-                wrap.Children.Add(grid); wrap.Children.Add(hint);
+                var caps = new WrapPanel { Margin = new Thickness(0, 0, 0, 8) };
+                void Caps()
+                {
+                    caps.Children.Clear();
+                    var seq = tb.Text.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                    for (var si = 0; si < seq.Length; si++)
+                    {
+                        if (si > 0) caps.Children.Add(new TextBlock { Text = "then", Style = (Style)Application.Current.Resources["Muted"], Margin = new Thickness(4, 6, 8, 0) });
+                        var keys = seq[si].Split('+', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                        for (var ki = 0; ki < keys.Length; ki++)
+                        {
+                            if (ki > 0) caps.Children.Add(new TextBlock { Text = "+", Style = (Style)Application.Current.Resources["Muted"], Margin = new Thickness(5, 6, 5, 0) });
+                            var cap = new Border { CornerRadius = new CornerRadius(6), BorderThickness = new Thickness(1, 1, 1, 2.5), Padding = new Thickness(9, 4, 9, 4), Margin = new Thickness(0, 0, 0, 2),
+                                Child = new TextBlock { Text = keys[ki], FontWeight = FontWeights.SemiBold, FontSize = 12.5 } };
+                            cap.SetResourceReference(Border.BackgroundProperty, "SurfaceAltBrush");
+                            cap.SetResourceReference(Border.BorderBrushProperty, "BorderBrush");
+                            caps.Children.Add(cap);
+                        }
+                    }
+                }
+                tb.TextChanged += (_, _) => Caps();
+                Caps();
+                wrap.Children.Add(caps);
+                wrap.Children.Add(grid);
+                var common = new WrapPanel { Margin = new Thickness(0, 8, 0, 0) };
+                common.Children.Add(new TextBlock { Text = "Common:", Style = (Style)Application.Current.Resources["Muted"], Margin = new Thickness(0, 5, 8, 0) });
+                foreach (var (name, combo) in new[] { ("Copy", "Ctrl+C"), ("Paste", "Ctrl+V"), ("Undo", "Ctrl+Z"), ("Save", "Ctrl+S"), ("Close tab", "Ctrl+W"), ("New tab", "Ctrl+T"),
+                    ("Switch app", "Alt+Tab"), ("Show desktop", "Win+D"), ("Task manager", "Ctrl+Shift+Esc"), ("Screenshot", "Win+Shift+S"), ("Emoji", "Win+Period"), ("Clipboard history", "Win+V") })
+                {
+                    var c = combo;
+                    var chipBtn = new Button { Content = name, FontSize = 11.5, Padding = new Thickness(9, 4, 9, 4), Margin = new Thickness(0, 0, 5, 5), ToolTip = combo };
+                    chipBtn.Click += (_, _) => tb.Text = c;
+                    common.Children.Add(chipBtn);
+                }
+                wrap.Children.Add(common);
+                wrap.Children.Add(hint);
                 wrap.Margin = new Thickness(0, 0, 0, 6);
                 grid.Margin = new Thickness(0);
                 return wrap;

@@ -2,8 +2,8 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:c="clr-namespace:SpaceMouse.App.Controls">
-  <ScrollViewer VerticalScrollBarVisibility="Auto">
-    <Grid>
+  <ScrollViewer x:Name="PageScroll" VerticalScrollBarVisibility="Auto">
+    <Grid x:Name="Root">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="*"/>
         <ColumnDefinition Width="24"/>
@@ -11,7 +11,7 @@
       </Grid.ColumnDefinitions>
 
       <!-- ===== left: device + onboarding ===== -->
-      <StackPanel Grid.Column="0">
+      <StackPanel x:Name="LeftCol" Grid.Column="0">
         <Border x:Name="Onboarding" Style="{StaticResource Card}" Margin="0,0,0,16" Visibility="Collapsed">
           <StackPanel>
             <Grid>
@@ -69,7 +69,7 @@
       </StackPanel>
 
       <!-- ===== right: quick controls ===== -->
-      <StackPanel Grid.Column="2">
+      <StackPanel x:Name="RightCol" Grid.Column="2">
         <Border Style="{StaticResource Card}" Margin="0,0,0,16">
           <StackPanel>
             <TextBlock Text="Mode" Style="{StaticResource H3}"/>

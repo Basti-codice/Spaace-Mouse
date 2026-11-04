@@ -64,7 +64,7 @@ public class PersistenceAndPresetTests : IDisposable
         }
         foreach (var b in profile.Buttons)
         {
-            if (b.Action?.Type.StartsWith("quickmenu") == true || b.Action?.Type == "window.grab") continue; // state-only actions are covered by dedicated tests
+            if (b.Action?.Type.StartsWith("quickmenu") == true || b.Action?.Type == "window.grab" || b.Action?.Type == "window.carry") continue; // state-only actions are covered by dedicated tests
             using var r = new Tests.Rig(null);
             r.Engine.Profiles = new List<Profile> { profile.Clone() };
             r.Engine.SetProfile(r.Engine.Profiles[0]);

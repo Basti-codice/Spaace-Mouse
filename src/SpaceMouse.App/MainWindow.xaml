@@ -1,12 +1,12 @@
 <Window x:Class="SpaceMouse.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Space Mouse Studio" Width="1240" Height="800" MinWidth="1060" MinHeight="680"
+        Title="Space Mouse Studio" Width="1240" Height="800" MinWidth="760" MinHeight="560"
         Background="{DynamicResource BgBrush}" Foreground="{DynamicResource TextBrush}" FontFamily="{StaticResource UiFont}" WindowStartupLocation="CenterScreen"
         UseLayoutRounding="True" SnapsToDevicePixels="True" TextOptions.TextFormattingMode="Display">
   <Grid>
     <Grid.ColumnDefinitions>
-      <ColumnDefinition Width="228"/>
+      <ColumnDefinition x:Name="NavCol" Width="228"/>
       <ColumnDefinition Width="*"/>
     </Grid.ColumnDefinitions>
 
@@ -18,7 +18,7 @@
         </Grid.RowDefinitions>
         <StackPanel Orientation="Horizontal" Margin="8,0,0,22">
           <Image Source="pack://application:,,,/Assets/app.png" Width="30" Height="30" RenderOptions.BitmapScalingMode="HighQuality"/>
-          <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+          <StackPanel x:Name="LogoText" Margin="10,0,0,0" VerticalAlignment="Center">
             <TextBlock Text="Space Mouse" FontWeight="SemiBold" FontSize="14"/>
             <TextBlock Text="Studio" Style="{StaticResource Muted}" Margin="0,-2,0,0"/>
           </StackPanel>
@@ -26,7 +26,7 @@
 
         <StackPanel Grid.Row="1" x:Name="NavPanel"/>
 
-        <Border Grid.Row="2" Style="{StaticResource Inset}" Padding="12,10">
+        <Border x:Name="NavStatusBox" Grid.Row="2" Style="{StaticResource Inset}" Padding="12,10">
           <StackPanel>
             <StackPanel Orientation="Horizontal">
               <Ellipse x:Name="NavDot" Width="8" Height="8" Margin="0,0,8,0" VerticalAlignment="Center" Fill="{DynamicResource MutedBrush}"/>

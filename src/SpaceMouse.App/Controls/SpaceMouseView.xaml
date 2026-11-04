@@ -8,8 +8,8 @@
       <ColumnDefinition Width="Auto"/>
     </Grid.ColumnDefinitions>
 
-    <StackPanel x:Name="LeftTiles" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,0" Width="200"/>
-    <StackPanel x:Name="RightTiles" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0" Width="200"/>
+    <StackPanel x:Name="LeftTiles" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0" Width="178"/>
+    <StackPanel x:Name="RightTiles" Grid.Column="2" VerticalAlignment="Center" Margin="8,0,0,0" Width="178"/>
 
     <Viewbox Grid.Column="1" Stretch="Uniform" MaxHeight="420" Margin="4">
       <Canvas x:Name="Stage" Width="420" Height="320">

@@ -143,7 +143,7 @@ public static class Presets
 
     private static Profile MakeWindowManager()
     {
-        var p = Base(WindowManager, "Window Manager", "Hold the left button to grab a window and move it. Tilt to maximise, minimise or snap.", "window");
+        var p = Base(WindowManager, "Window Manager", "Right button: pick up a window and carry it with the cap until you press again. Or hold left to drag it. Tilt to maximise, minimise or snap.", "window");
         p.Axes.AddRange(new[]
         {
             Cont(Axis.Tx, "window.move.x", speed: 1.0, accel: 1.4, mod: ButtonModifier.Left),
@@ -156,7 +156,7 @@ public static class Presets
             Disc(Axis.Tz, A("window.snap.center"), A("window.close"), thr: 0.9, cooldown: 1000, mod: ButtonModifier.Right),
         });
         p.Buttons.Add(Btn(ButtonId.Left, ButtonMode.Hold, A("window.grab")));
-        p.Buttons.Add(Btn(ButtonId.Right, ButtonMode.Tap, A("mouse.click.left")));
+        p.Buttons.Add(Btn(ButtonId.Right, ButtonMode.Tap, A("window.carry"), longPress: A("mouse.click.left")));
         p.QuickMenus.Add(Menu("Windows",
             Item("Maximise", "maximize", A("window.maximize")),
             Item("Snap right", "snap-right", A("window.snap.right")),

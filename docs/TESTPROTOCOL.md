@@ -3,7 +3,7 @@
 Status of this document: **test run on Linux (cloud build environment), no Windows machine and no SpaceMouse involved.**
 A passing build or passing simulation tests do **not** prove compatibility with a real SpaceMouse Compact. See "Not physically verified".
 
-## Automated tests (xUnit) - 105 / 105 passed
+## Automated tests (xUnit) - 109 / 109 passed
 
 `dotnet test tests/SpaceMouse.Core.Tests` - deterministic (simulated time, virtual device, dry-run platform), ~0.4 s.
 

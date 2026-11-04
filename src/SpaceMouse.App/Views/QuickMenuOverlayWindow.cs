@@ -15,6 +15,7 @@ public sealed class QuickMenuOverlayWindow : Window
     private readonly RadialMenuControl _menu = new() { Width = 440, Height = 440 };
     private readonly ScaleTransform _scale = new(0.9, 0.9);
     private int _generation;
+    private readonly System.Windows.Threading.DispatcherTimer _pointerTimer = new() { Interval = TimeSpan.FromMilliseconds(16) };
 
     public QuickMenuOverlayWindow(SpaceMouseEngine engine)
     {
@@ -27,6 +28,7 @@ public sealed class QuickMenuOverlayWindow : Window
         grid.Children.Add(_menu);
         Content = grid;
 
+        _pointerTimer.Tick += (_, _) => { var p = engine.Menu.Pointer; _menu.SetPointer(p.X, p.Y); };
         engine.Menu.Opened += v => Post(() => OnOpened(v));
         engine.Menu.Changed += v => Post(() => _menu.SetMenu(v.Items, v.Selected, TitleOf(v)));
         engine.Menu.Closed += _ => Post(OnClosed);
@@ -42,7 +44,12 @@ public sealed class QuickMenuOverlayWindow : Window
     private void OnOpened(QuickMenuView v)
     {
         ++_generation;
+        _menu.ConfirmHint = v.HoldMode ? "Release to select" : "Left button = select";
+        _menu.CancelHint = v.HoldMode ? "Release in centre = cancel" : "Right button = cancel";
+        _menu.IdleHint = v.Menu.SelectMode == SpaceMouse.Core.Profiles.MenuSelectMode.Rotation ? "Twist to choose" : "Push toward an item";
         _menu.SetMenu(v.Items, v.Selected, TitleOf(v));
+        _menu.RefreshHints();
+        _pointerTimer.Start();
         BeginAnimation(OpacityProperty, null);
         Opacity = 0;
         if (!IsVisible) Show();
@@ -58,6 +65,7 @@ public sealed class QuickMenuOverlayWindow : Window
     private void OnClosed()
     {
         var gen = ++_generation;
+        _pointerTimer.Stop();
         if (!IsVisible) return;
         var fade = new DoubleAnimation(0, TimeSpan.FromMilliseconds(110));
         fade.Completed += (_, _) => { if (gen == _generation) Hide(); };

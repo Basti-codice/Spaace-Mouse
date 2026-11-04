@@ -76,6 +76,9 @@ public static class BuiltInActions
             (_, c) => new WindowMove(c, horizontal: false));
         r.Register(new("window.grab", "Grab window under cursor", CatWindow, "grab", "While held, window movement actions move the window under the cursor.", H),
             (_, c) => new WindowGrab(c));
+        r.Register(new("window.carry", "Pick up / drop window", CatWindow, "grab",
+            "First press picks up the window under the cursor: it follows the SpaceMouse (cursor movement moves the window) until you press again to drop it.", D),
+            (_, c) => new WindowCarry(c));
         Key(r, "desktop.next", "Next virtual desktop", CatWindow, "desktop", "Ctrl+Win+Right");
         Key(r, "desktop.prev", "Previous virtual desktop", CatWindow, "desktop", "Ctrl+Win+Left");
         Key(r, "desktop.new", "New virtual desktop", CatWindow, "desktop", "Ctrl+Win+D");
@@ -197,6 +200,14 @@ public static class BuiltInActions
             // + X = right, + Y (forward) = up on screen
             var px = Take((_h ? value : -value) * PixelsPerSecond * dt);
             if (px == 0) return;
+            var carried = _c.Grab.Handle;
+            if (carried != 0)
+            {
+                // A window is picked up: cursor movement moves the window instead.
+                try { if (_h) _c.Windows.MoveBy(carried, px, 0); else _c.Windows.MoveBy(carried, 0, px); }
+                catch { _c.Grab.Handle = 0; throw; }
+                return;
+            }
             if (_h) _c.Input.MoveCursorBy(px, 0); else _c.Input.MoveCursorBy(0, px);
         }
     }
@@ -330,6 +341,26 @@ public static class BuiltInActions
             _c.Grab.Handle = (_c.Windows.WindowAt(x, y) ?? _c.Windows.GetForeground())?.Handle ?? 0;
         }
         public override void End() => _c.Grab.Handle = 0;
+    }
+
+    private sealed class WindowCarry : ActionHandler
+    {
+        private readonly ActionContext _c;
+        public WindowCarry(ActionContext c) { _c = c; }
+        public override void Execute()
+        {
+            if (_c.Grab.Handle != 0)
+            {
+                _c.Grab.Handle = 0;
+                _c.Control.Notify("Window dropped");
+                return;
+            }
+            var (x, y) = _c.Input.GetCursor();
+            var w = _c.Windows.WindowAt(x, y) ?? _c.Windows.GetForeground();
+            if (w == null) throw new InvalidOperationException("No window under the cursor to pick up.");
+            _c.Grab.Handle = w.Handle;
+            _c.Control.Notify("Window picked up - move the SpaceMouse, press again to drop");
+        }
     }
 
     private sealed class Launch : ActionHandler

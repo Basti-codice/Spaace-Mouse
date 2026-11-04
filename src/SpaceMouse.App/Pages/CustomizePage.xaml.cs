@@ -22,11 +22,13 @@ public partial class CustomizePage : UserControl, IPage
     private Profile? _profile;
     private bool _syncing, _tuningOpen;
     private Action<double>? _previewUpdate;
+    private void AddPreview(Action<double> a) => _previewUpdate = (Action<double>?)Delegate.Combine(_previewUpdate, a);
 
     public CustomizePage()
     {
         InitializeComponent();
         ProfileBox.ItemsSource = _app.Profiles;
+        ResponsiveLayout.Attach(this, Root, LeftScroll, EditorCard, 1050, PageScroll, LeftScroll, EditorScroll);
         Device.TargetClicked += t => { _target = t; _modifier = ButtonModifier.None; BuildEditor(); };
         _timer.Tick += (_, _) =>
         {
@@ -175,6 +177,18 @@ public partial class CustomizePage : UserControl, IPage
             Editor.Children.Add(neg);
         }
 
+        // --- trigger point (discrete) / response presets (continuous)
+        if (binding.Behavior == AxisBehavior.Discrete)
+        {
+            Editor.Children.Add(Section("Trigger point"));
+            Editor.Children.Add(BuildTriggerBar(binding));
+        }
+        else
+        {
+            Editor.Children.Add(Section("Response"));
+            Editor.Children.Add(BuildResponsePresets(binding));
+        }
+
         // --- live preview + tuning
         Editor.Children.Add(Section("Live preview"));
         Editor.Children.Add(BuildPreview(binding));
@@ -279,16 +293,109 @@ public partial class CustomizePage : UserControl, IPage
                 thrA.Y1 = thrB.Y1 = 0; thrA.Y2 = thrB.Y2 = H;
             }
             info.Text = b.Behavior == AxisBehavior.Continuous ? "Input → speed" : "Input → trigger (dashed = trigger point)";
+            if (b.Behavior == AxisBehavior.Continuous && b.Action?.Type is "mouse.move.x" or "mouse.move.y")
+                info.Text += $"   ·   full push ≈ {Math.Abs(AxisMath.Continuous(b.Tuning, 1)) * 1000:0} px/s";
         };
         _redraw();
 
-        _previewUpdate = raw =>
+        AddPreview(raw =>
         {
             var x = Math.Clamp(raw, -1, 1);
             Canvas.SetLeft(dot, Px(x) - 6); Canvas.SetTop(dot, Py(Out(x)) - 6);
-        };
-        _previewUpdate(0);
+        });
+        _previewUpdate?.Invoke(0);
         return frame;
+    }
+
+    // ---------------------------------------------------------------- trigger point bar
+    /// <summary>Live deflection bar with a draggable trigger marker, presets and a "would trigger now" indicator.</summary>
+    private UIElement BuildTriggerBar(AxisBinding b)
+    {
+        const double W = 396, H = 46;
+        var t = b.Tuning;
+        var root = new StackPanel();
+        var canvas = new Canvas { Width = W, Height = H, Background = Brushes.Transparent, Cursor = Cursors.SizeWE };
+        var track = new Border { Width = W, Height = 14, CornerRadius = new CornerRadius(7), Margin = new Thickness(0) };
+        track.SetResourceReference(Border.BackgroundProperty, "SurfaceHoverBrush");
+        Canvas.SetTop(track, 16);
+        var fill = new Border { Height = 14, CornerRadius = new CornerRadius(7), Width = 0 };
+        fill.SetResourceReference(Border.BackgroundProperty, "MutedBrush");
+        Canvas.SetTop(fill, 16);
+        var zone = new Border { Height = 14, Opacity = 0.18, CornerRadius = new CornerRadius(0, 7, 7, 0) };   // area that triggers
+        zone.SetResourceReference(Border.BackgroundProperty, "AccentBrush");
+        Canvas.SetTop(zone, 16);
+        var marker = new Border { Width = 6, Height = 34, CornerRadius = new CornerRadius(3) };
+        marker.SetResourceReference(Border.BackgroundProperty, "AccentBrush");
+        Canvas.SetTop(marker, 6);
+        var label = new TextBlock { FontSize = 11, FontWeight = FontWeights.SemiBold };
+        label.SetResourceReference(TextBlock.ForegroundProperty, "AccentBrush");
+        Canvas.SetTop(label, -2);
+        canvas.Children.Add(track); canvas.Children.Add(zone); canvas.Children.Add(fill); canvas.Children.Add(marker); canvas.Children.Add(label);
+
+        var status = new TextBlock { FontSize = 12, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 8, 0, 0) };
+        void Layout()
+        {
+            var x = t.Threshold * W;
+            Canvas.SetLeft(marker, x - 3);
+            Canvas.SetLeft(zone, x); zone.Width = Math.Max(0, W - x);
+            label.Text = $"Triggers at {t.Threshold * 100:0}%";
+            Canvas.SetLeft(label, Math.Clamp(x - 40, 0, W - 90));
+        }
+        Layout();
+
+        bool drag = false;
+        void SetFromMouse(MouseEventArgs e)
+        {
+            var x = Math.Clamp(e.GetPosition(canvas).X / W, 0.15, 0.95);
+            t.Threshold = Math.Round(x * 100) / 100; Layout(); Edited(); _redraw?.Invoke();
+        }
+        canvas.MouseLeftButtonDown += (_, e) => { drag = true; canvas.CaptureMouse(); SetFromMouse(e); };
+        canvas.MouseMove += (_, e) => { if (drag) SetFromMouse(e); };
+        canvas.MouseLeftButtonUp += (_, _) => { drag = false; canvas.ReleaseMouseCapture(); };
+
+        root.Children.Add(canvas);
+        root.Children.Add(status);
+        root.Children.Add(Text("Push the cap while watching the bar. The action fires when the bar reaches the marker. Drag the marker to change it.", muted: true, top: 6));
+
+        // presets
+        var presets = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 10, 0, 0) };
+        foreach (var (name, v) in new[] { ("Light push", 0.35), ("Normal", 0.55), ("Firm push", 0.80) })
+        {
+            var btn = new Button { Content = $"{name}  {v * 100:0}%", Margin = new Thickness(0, 0, 8, 0), FontSize = 12.5 };
+            var val = v;
+            btn.Click += (_, _) => { t.Threshold = val; Layout(); Edited(); _redraw?.Invoke(); };
+            presets.Children.Add(btn);
+        }
+        root.Children.Add(presets);
+
+        AddPreview(raw =>
+        {
+            var level = Math.Abs(AxisMath.Discrete(t, raw));
+            fill.Width = Math.Clamp(level, 0, 1) * W;
+            var over = level >= t.Threshold;
+            fill.SetResourceReference(Border.BackgroundProperty, over ? "SuccessBrush" : "MutedBrush");
+            status.Text = over ? "● Would trigger now" : level > 0.02 ? "○ Not far enough yet" : "Push the cap to test";
+            status.SetResourceReference(TextBlock.ForegroundProperty, over ? "SuccessBrush" : "MutedBrush");
+        });
+        _previewUpdate?.Invoke(0);
+        return root;
+    }
+
+    private UIElement BuildResponsePresets(AxisBinding b)
+    {
+        var t = b.Tuning;
+        var panel = new StackPanel();
+        var row = new StackPanel { Orientation = Orientation.Horizontal };
+        foreach (var (name, acc, sens, spd) in new[] { ("Precise", 2.2, 1.0, 0.7), ("Balanced", 1.6, 1.0, 1.0), ("Fast", 1.2, 1.3, 1.6) })
+        {
+            var btn = new Button { Content = name, Margin = new Thickness(0, 0, 8, 0), MinWidth = 90 };
+            var a = acc; var s = sens; var sp = spd;
+            btn.Click += (_, _) => { t.Acceleration = a; t.Sensitivity = s; t.Speed = sp; Edited(); BuildEditor(); };
+            row.Children.Add(btn);
+        }
+        panel.Children.Add(row);
+        panel.Children.Add(Text("The harder you push, the faster it goes - the curve below shows exactly how. Precise = gentle pushes stay slow, Fast = reacts early. Fine-tune under 'Fine tuning'.", muted: true, top: 8));
+        return panel;
     }
 
     // ================================================================ button editor
