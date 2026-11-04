@@ -21,7 +21,6 @@ public partial class SpaceMouseView : UserControl
     private readonly Dictionary<Axis, Tile> _tiles = new();
     private readonly Dictionary<string, Border> _btnTiles = new();
     private string? _selected;
-    private double _lastLive;
 
     /// <summary>Raised with "Tx".."Rz", "Left" or "Right".</summary>
     public event Action<string>? TargetClicked;

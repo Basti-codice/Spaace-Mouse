@@ -14,7 +14,7 @@
     <AssemblyTitle>Space Mouse Studio</AssemblyTitle>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <NoWarn>$(NoWarn);CS8618;CS0108</NoWarn>
+    <NoWarn>$(NoWarn);CS8618;CS0108;WFAC010</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\SpaceMouse.Core\SpaceMouse.Core.csproj" />
