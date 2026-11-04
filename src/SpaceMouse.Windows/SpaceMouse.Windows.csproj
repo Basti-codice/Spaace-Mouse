@@ -3,7 +3,6 @@
     <TargetFramework>net8.0-windows</TargetFramework>
     <RootNamespace>SpaceMouse.Windows</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <UseWPF>true</UseWPF>
   </PropertyGroup>
   <ItemGroup><ProjectReference Include="..\SpaceMouse.Core\SpaceMouse.Core.csproj" /></ItemGroup>
 </Project>

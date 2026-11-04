@@ -28,6 +28,8 @@ public sealed class AppSettings
     public bool LastModeCustom { get; set; }
     public bool FirstRunDone { get; set; }
     public bool VirtualControllerSendsToSystem { get; set; }
+    /// <summary>"RawInput" (default, recommended) or "DirectHid" (fallback backend).</summary>
+    public string InputMethod { get; set; } = "RawInput";
     public int ConfigVersionNote { get; set; }
 }
 

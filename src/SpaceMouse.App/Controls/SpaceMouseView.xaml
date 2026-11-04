@@ -1,0 +1,89 @@
+<UserControl x:Class="SpaceMouse.App.Controls.SpaceMouseView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="Auto"/>
+      <ColumnDefinition Width="*" MinWidth="260"/>
+      <ColumnDefinition Width="Auto"/>
+    </Grid.ColumnDefinitions>
+
+    <StackPanel x:Name="LeftTiles" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,0" Width="200"/>
+    <StackPanel x:Name="RightTiles" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0" Width="200"/>
+
+    <Viewbox Grid.Column="1" Stretch="Uniform" MaxHeight="420" Margin="4">
+      <Canvas x:Name="Stage" Width="420" Height="320">
+        <!-- soft shadow -->
+        <Ellipse Canvas.Left="80" Canvas.Top="280" Width="260" Height="30" Fill="{DynamicResource BorderBrush}" Opacity="0.35">
+          <Ellipse.Effect><BlurEffect Radius="14"/></Ellipse.Effect>
+        </Ellipse>
+        <!-- body -->
+        <Rectangle Canvas.Left="60" Canvas.Top="12" Width="300" Height="288" RadiusX="72" RadiusY="72"
+                   Fill="{DynamicResource DeviceBodyBrush}" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1.5"/>
+        <!-- cap base -->
+        <Ellipse Canvas.Left="144" Canvas.Top="74" Width="132" Height="132" Fill="{DynamicResource SurfaceAltBrush}" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1.5"/>
+
+        <!-- Rz ring + markers -->
+        <Ellipse x:Name="RzRing" Tag="Rz" Canvas.Left="132" Canvas.Top="62" Width="156" Height="156" Fill="Transparent"
+                 Stroke="{DynamicResource MutedBrush}" StrokeThickness="4" StrokeDashArray="1.2 2.2" Opacity="0.35" Cursor="Hand"/>
+        <Path x:Name="RzPos" Tag="Rz" Data="M -9,-8 L 9,0 L -9,8 Z" Fill="{DynamicResource MutedBrush}" Opacity="0.4" Canvas.Left="270" Canvas.Top="90" Cursor="Hand">
+          <Path.RenderTransform><RotateTransform Angle="50"/></Path.RenderTransform>
+        </Path>
+        <Path x:Name="RzNeg" Tag="Rz" Data="M -9,-8 L 9,0 L -9,8 Z" Fill="{DynamicResource MutedBrush}" Opacity="0.4" Canvas.Left="150" Canvas.Top="198" Cursor="Hand">
+          <Path.RenderTransform><RotateTransform Angle="230"/></Path.RenderTransform>
+        </Path>
+
+        <!-- translation arrows -->
+        <Path x:Name="TxNeg" Tag="Tx" Data="M 126,120 L 100,140 L 126,160 Z" Fill="{DynamicResource MutedBrush}" Opacity="0.4" Cursor="Hand"/>
+        <Path x:Name="TxPos" Tag="Tx" Data="M 294,120 L 320,140 L 294,160 Z" Fill="{DynamicResource MutedBrush}" Opacity="0.4" Cursor="Hand"/>
+        <Path x:Name="TyPos" Tag="Ty" Data="M 190,54 L 210,28 L 230,54 Z" Fill="{DynamicResource MutedBrush}" Opacity="0.4" Cursor="Hand"/>
+        <Path x:Name="TyNeg" Tag="Ty" Data="M 190,226 L 210,252 L 230,226 Z" Fill="{DynamicResource MutedBrush}" Opacity="0.4" Cursor="Hand"/>
+
+        <!-- cap (moves with input) -->
+        <Canvas x:Name="Cap" Width="420" Height="320" IsHitTestVisible="False">
+          <Canvas.RenderTransform>
+            <TransformGroup>
+              <TranslateTransform x:Name="CapMove"/>
+            </TransformGroup>
+          </Canvas.RenderTransform>
+          <Ellipse x:Name="CapTop" Canvas.Left="156" Canvas.Top="86" Width="108" Height="108" RenderTransformOrigin="0.5,0.5"
+                   Fill="{DynamicResource DeviceCapBrush}" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1.5">
+            <Ellipse.RenderTransform><ScaleTransform x:Name="CapScale" ScaleX="1" ScaleY="1"/></Ellipse.RenderTransform>
+            <Ellipse.Effect><DropShadowEffect BlurRadius="14" ShadowDepth="4" Opacity="0.25" Direction="270"/></Ellipse.Effect>
+          </Ellipse>
+          <Ellipse x:Name="CapShine" Canvas.Left="180" Canvas.Top="102" Width="40" Height="26" Fill="White" Opacity="0.35">
+            <Ellipse.RenderTransform><TranslateTransform x:Name="ShineMove"/></Ellipse.RenderTransform>
+          </Ellipse>
+          <Rectangle x:Name="CapMark" Canvas.Left="207" Canvas.Top="94" Width="6" Height="22" RadiusX="3" RadiusY="3" Fill="{DynamicResource AccentBrush}">
+            <Rectangle.RenderTransform><RotateTransform x:Name="MarkRot" CenterX="3" CenterY="46" Angle="0"/></Rectangle.RenderTransform>
+          </Rectangle>
+        </Canvas>
+
+        <!-- buttons -->
+        <Rectangle x:Name="BtnLeft" Tag="Left" Canvas.Left="84" Canvas.Top="258" Width="122" Height="34" RadiusX="17" RadiusY="17"
+                   Fill="{DynamicResource SurfaceBrush}" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1.5" Cursor="Hand"/>
+        <Rectangle x:Name="BtnRight" Tag="Right" Canvas.Left="214" Canvas.Top="258" Width="122" Height="34" RadiusX="17" RadiusY="17"
+                   Fill="{DynamicResource SurfaceBrush}" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1.5" Cursor="Hand"/>
+        <TextBlock Canvas.Left="84" Canvas.Top="266" Width="122" TextAlignment="Center" Text="LEFT" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource MutedBrush}" IsHitTestVisible="False"/>
+        <TextBlock Canvas.Left="214" Canvas.Top="266" Width="122" TextAlignment="Center" Text="RIGHT" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource MutedBrush}" IsHitTestVisible="False"/>
+
+        <!-- badges for axes without arrows -->
+        <Grid x:Name="BadgeTz" Tag="Tz" Canvas.Left="6" Canvas.Top="52" Width="40" Height="40" Cursor="Hand">
+          <Ellipse x:Name="BadgeTzBg" Fill="{DynamicResource SurfaceAltBrush}" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1.5"/>
+          <TextBlock Text="Z" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="14" IsHitTestVisible="False"/>
+        </Grid>
+        <Grid x:Name="BadgeRx" Tag="Rx" Canvas.Left="374" Canvas.Top="52" Width="40" Height="40" Cursor="Hand">
+          <Ellipse x:Name="BadgeRxBg" Fill="{DynamicResource SurfaceAltBrush}" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1.5"/>
+          <TextBlock Text="RX" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="12" IsHitTestVisible="False"/>
+        </Grid>
+        <Grid x:Name="BadgeRy" Tag="Ry" Canvas.Left="374" Canvas.Top="102" Width="40" Height="40" Cursor="Hand">
+          <Ellipse x:Name="BadgeRyBg" Fill="{DynamicResource SurfaceAltBrush}" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1.5"/>
+          <TextBlock Text="RY" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="12" IsHitTestVisible="False"/>
+        </Grid>
+
+        <!-- selection halo -->
+        <Ellipse x:Name="Halo" Width="0" Height="0" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2.5" Fill="Transparent" IsHitTestVisible="False" Visibility="Collapsed"/>
+      </Canvas>
+    </Viewbox>
+  </Grid>
+</UserControl>
