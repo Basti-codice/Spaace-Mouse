@@ -22,7 +22,9 @@ PORT="$OUT/portable"; mkdir -p "$PORT"
 cp "$PUB/SpaceMouseStudio.exe" "$PORT/"
 cp README.md "$PORT/README.txt"
 : > "$PORT/portable.flag"          # data lives next to the EXE in .\data
-( cd "$PORT" && zip -q -r "../SpaceMouseStudio-$VERSION-portable-win-x64.zip" . )
+ZIP="$(pwd)/$OUT/SpaceMouseStudio-$VERSION-portable-win-x64.zip"
+if command -v zip >/dev/null 2>&1; then ( cd "$PORT" && zip -q -r "$ZIP" . )
+else ( cd "$PORT" && python3 -c "import sys,zipfile,os;z=zipfile.ZipFile(sys.argv[1],'w',zipfile.ZIP_DEFLATED);[z.write(f) for f in os.listdir('.')];z.close()" "$ZIP" ); fi
 
 echo "== 4/4 installer"
 if command -v makensis >/dev/null 2>&1; then
